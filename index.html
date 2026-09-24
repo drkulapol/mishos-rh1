@@ -30,6 +30,10 @@
 body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.5 "IBM Plex Sans Thai","Noto Sans Thai","Sarabun",system-ui,sans-serif;padding-inline:16px;padding-block:0 40px}
 .wrap{max-width:1400px;margin:0 auto}
 header.top{padding-block:18px 10px;display:flex;flex-wrap:wrap;gap:6px 24px;align-items:baseline;justify-content:space-between}
+nav.suite{display:flex;flex-wrap:wrap;gap:8px;padding-block:2px 12px}
+nav.suite a{font-size:12.5px;font-weight:500;color:var(--ink-2);background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:6px 13px;text-decoration:none;line-height:1.25;transition:border-color .12s,color .12s}
+nav.suite a:hover{border-color:var(--blue);color:var(--blue-ink)}
+nav.suite a[aria-current="page"]{background:var(--blue);border-color:var(--blue);color:#fff;font-weight:600;cursor:default}
 h1{font-size:22px;line-height:1.25;margin:0;font-weight:700;letter-spacing:-.005em;text-wrap:balance}
 .sub{color:var(--ink-2);font-size:13px;margin:2px 0 0}
 .asof{color:var(--ink-3);font-size:12px}
@@ -164,6 +168,13 @@ table.mx td.fcl{border-bottom:2px solid var(--hi)}
   </div>
   <div class="asof">ข้อมูลจากไฟล์ nhso_2569_merged · ประชากร UC ณ 1 เม.ย. 2568</div>
 </header>
+
+<nav class="suite" aria-label="แดชบอร์ดชุดวิเคราะห์เขต 1">
+  <a href="https://drkulapol.github.io/planfin-analysis/" target="_blank" rel="noopener">วิเคราะห์ Planfin เขต 1</a>
+  <a href="https://drkulapol.github.io/mishos-rh1/" target="_blank" rel="noopener" aria-current="page">วิเคราะห์ รายรับรายกองทุน เขต 1</a>
+  <a href="https://drkulapol.github.io/quickmethod/dashboard.html" target="_blank" rel="noopener">วิเคราะห์ รายรับ-จ่ายทางบัญชี เขต 1</a>
+  <a href="https://cmi-rh1.github.io/cmi-rh1/#tab=overview&h=11183" target="_blank" rel="noopener">วิเคราะห์ CMI รายโรค/กลุ่ม ADJRW &lt; 0.5 เขต 1</a>
+</nav>
 
 <nav class="tabs" role="tablist" id="tabs" aria-label="แหล่งข้อมูล"></nav>
 
