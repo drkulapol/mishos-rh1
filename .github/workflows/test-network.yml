@@ -1,0 +1,17 @@
+name: NHSO network test
+on:
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Test mishos.nhso.go.th reachability
+        run: |
+          echo "== หน้าเว็บหลัก =="
+          curl -sS -m 20 -o /dev/null -w "HTTP status: %{http_code}\n" https://mishos.nhso.go.th/mis_hos/ || echo "FAILED (exit $?)"
+          echo "== API ดึงข้อมูล (เหมือนที่สคริปต์ใช้จริง) =="
+          curl -sS -m 20 -X POST https://mishos.nhso.go.th/mis_hos_apixam/simplestudio/ss_statement.php \
+            -H "Content-Type: application/json" \
+            -d '{"ssid":"1826","api_type":"get_tabledata","hcode":"11121","province":"5001","year":"2026","subfund":"","province_name":""}' \
+            -w "\nHTTP status: %{http_code}\n" || echo "FAILED (exit $?)"
