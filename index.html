@@ -710,7 +710,9 @@ function viewHp(){
     <div class="legend">${metricPc?legendGrad():'<span>เฉดสีน้ำเงิน = อันดับสูงในกลุ่ม</span>'}<span>ค่าในช่อง: ${metricPc?'บาท / หัว UC':'เงินที่ได้รับ (บาท)'} · #n = อันดับในกลุ่ม · รพ. ที่โฟกัสอยู่บนสุดพร้อมกรอบ</span></div>
     <div class="panel"><div class="scroll"><table class="mx">
       <thead><tr><th class="t">หน่วยบริการ</th><th class="t">รหัส</th><th class="t">จังหวัด</th><th>ขนาด</th><th>ประชากร UC</th>${SIDS.map(id=>`<th class="h" data-tip="${esc(META[id].t+' ('+META[id].f+')')}">${esc(META[id].t.replace('ข้อมูลการเบิกชดเชย','').replace('ข้อมูล',''))}<br><span style="font-weight:400">${META[id].f}${isLM(id)&&metricPc?' · OP ต่อครั้ง':''}</span></th>`).join('')}</tr></thead>
-      <tbody>${mxRows}</tbody></table></div></div>
+      <tbody>${mxRows}</tbody></table></div></div>`;
+}
+
 /* ---------- tab: executive summary (fixed peer group by GroupName) ---------- */
 const EXEC_SCOPE = [
   {src:'L1', label:'L1_budget', only:['กองทุนเอดส์','ค่าบริการฟื้นฟูสมรรถภาพด้านการแพทย์','งบแพทย์แผนไทย']},
