@@ -716,7 +716,7 @@ function viewHp(){
 /* ---------- tab: executive summary (fixed peer group by GroupName) ---------- */
 const EXEC_SCOPE = [
   {src:'L1', label:'L1_budget', only:['กองทุนเอดส์','ค่าบริการฟื้นฟูสมรรถภาพด้านการแพทย์','งบแพทย์แผนไทย']},
-  {src:'L2', label:'L2_statementuc', minPC:2},
+  {src:'L2', label:'L2_statementuc', minPC:2, exclude:['OPCS','OPLG','IPCS','IPLG','OPKTMN','IPKTMN']},
   {src:'L5', label:'L5_moph_2205'},
   {src:'L6', label:'L6_ktp_2263'}
 ];
@@ -727,18 +727,27 @@ function execItems(){
   EXEC_SCOPE.forEach(sc=>{
     build(sc.src,0).list.filter(f=> sc.only ? (f.lvl==='s' && sc.only.includes(f.name)) : f.lvl==='m').forEach(f=>{
       if(sc.minPC && (!totalPop || f.sum/totalPop < sc.minPC)) return;
-      items.push({src:sc.label, name:f.name, arr:f.arr});
+      if(sc.exclude && sc.exclude.includes(f.key.split(':')[1])) return;
+      items.push({id:sc.src+':'+f.key.split(':')[1], src:sc.label, name:f.name, arr:f.arr});
     });
   });
-  items.push({src:'L7_csmbs', name:'CSMBS (สิทธิข้าราชการ) รวมทั้งปี', arr:build('L7',0).total});
-  items.push({src:'L8_lgo', name:'อปท. (LGO) รวมทั้งปี', arr:build('L8',0).total});
+  const lm7 = lmMeas('L7'), lm8 = lmMeas('L8');
+  items.push({id:'L7:CSMBS', src:'L7_csmbs · ต่อครั้ง OP', name:'CSMBS (สิทธิข้าราชการ)', arr:lm7.d.opA, visitArr:lm7.d.opN, pvArr:lm7.M.opVisit.vals, perVisit:true});
+  items.push({id:'L8:LGO', src:'L8_lgo · ต่อครั้ง OP', name:'อปท. (LGO)', arr:lm8.d.opA, visitArr:lm8.d.opN, pvArr:lm8.M.opVisit.vals, perVisit:true});
   return EXEC_ITEMS = items;
 }
+const EXEC_SKIP_CS_SIZES = ['A','S','M1'];
+function execSkipCS(focus){ return EXEC_SKIP_CS_SIZES.includes(H[focus].l); }
 function execRows(focus){
-  const items = execItems(), peers = ALL.filter(i=>H[i].g===H[focus].g), pop = H[focus].u;
+  const skipCS = execSkipCS(focus);
+  const items = execItems().filter(it=> !skipCS || (it.id!=='L2:OTCS' && it.id!=='L7:CSMBS'));
+  const peers = ALL.filter(i=>H[i].g===H[focus].g), pop = H[focus].u;
   return items.map(it=>{
-    const arr = it.arr, ownAmt = arr[focus], ownPC = pop? ownAmt/pop : 0;
-    const peerPC = peers.map(i=> H[i].u? arr[i]/H[i].u : 0), n = peerPC.length;
+    const pv = !!it.perVisit;
+    const arr = it.arr, ownAmt = arr[focus];
+    const ownPC = pv ? (it.pvArr[focus]||0) : (pop? ownAmt/pop : 0);
+    const peerPC = pv ? peers.map(i=> it.pvArr[i]||0) : peers.map(i=> H[i].u? arr[i]/H[i].u : 0);
+    const n = peerPC.length;
     const mean = peerPC.reduce((a,b)=>a+b,0)/(n||1);
     const sd = Math.sqrt(peerPC.reduce((a,b)=>a+(b-mean)*(b-mean),0)/(n||1));
     const max = Math.max(0,...peerPC);
@@ -747,7 +756,8 @@ function execRows(focus){
       return {...it, ownAmt, ownPC, mean, sd, max, n, status: zPeers>=n?'zeroB':'zeroA', zPeers, doPeers:n-zPeers};
     }
     const status = ownPC > mean+sd ? 'good' : (ownPC < mean ? 'opp' : 'normal');
-    return {...it, ownAmt, ownPC, mean, sd, max, n, status, upLow: Math.round((mean-ownPC)*pop), upHigh: Math.round((max-ownPC)*pop)};
+    const mult = pv ? (it.visitArr[focus]||0) : pop;
+    return {...it, ownAmt, ownPC, mean, sd, max, n, status, upLow: Math.round((mean-ownPC)*mult), upHigh: Math.round((max-ownPC)*mult)};
   });
 }
 function execRow(r, kind){
@@ -793,7 +803,7 @@ function viewExec(){
       <tbody>${zeroA.map(r=>execRow(r,'zeroA')).join('')}</tbody></table></div></div>` : `<div class="panel empty">ไม่มีรายการในกลุ่มนี้</div>`}
     <h3 class="sec">ผลงานเป็น 0 ทั้งกลุ่ม — น่าจะเป็นบริบทพื้นที่ ไม่ใช่ประเด็นเฉพาะ รพ.นี้ <span class="tag">${zeroB.length} รายการ</span></h3>
     ${zeroB.length? `<div class="panel" style="padding:14px 16px;color:var(--ink-2);font-size:13px;line-height:1.7">${zeroB.map(r=>esc(r.name)).join(' · ')}</div>` : `<div class="panel empty">ไม่มีรายการในกลุ่มนี้</div>`}
-    <p class="note">ขอบเขตข้อมูล: L1_budget เฉพาะกองทุนเอดส์ / ฟื้นฟูสมรรถภาพด้านการแพทย์ / แพทย์แผนไทย · L2_statementuc เฉพาะหมวดที่ต่อหัวประชากรทั้งเขต ≥ 2 บาท · L5_moph_2205 และ L6_ktp_2263 ทั้งหมด · L7_csmbs และ L8_lgo รวมทั้งปี (สิทธิข้าราชการ/อปท.) · ${normalN} รายการอยู่ในเกณฑ์ปกติ (ใกล้เคียงค่าเฉลี่ยกลุ่ม) จึงไม่แสดงในหน้านี้ · กลุ่มเปรียบเทียบอิงตาม “กลุ่มระดับบริการ (GroupName)” จากไฟล์ต้นฉบับเสมอ ไม่ใช้ตัวกรองด้านบน</p>`;
+    <p class="note">ขอบเขตข้อมูล: L1_budget เฉพาะกองทุนเอดส์ / ฟื้นฟูสมรรถภาพด้านการแพทย์ / แพทย์แผนไทย · L2_statementuc เฉพาะหมวดที่ต่อหัวประชากรทั้งเขต ≥ 2 บาท (ไม่รวม OPCS/OPLG/IPCS/IPLG/OPKTMN/IPKTMN ซึ่งวิเคราะห์แยกต่อครั้ง OP ใน L7/L8 ข้างต้นแล้ว) · L5_moph_2205 และ L6_ktp_2263 ทั้งหมด · L7_csmbs และ L8_lgo วิเคราะห์เป็นยอดชดเชยเฉลี่ยต่อครั้ง OP (ไม่ใช่ต่อหัวประชากร) เป้าหมายส่วนเพิ่ม = ส่วนต่างต่อครั้ง × จำนวน OP visit เดิมของ รพ. นั้น · รพ. ขนาด A/S/M1 ไม่วิเคราะห์ OTCS และ L7_csmbs · ${normalN} รายการอยู่ในเกณฑ์ปกติ (ใกล้เคียงค่าเฉลี่ยกลุ่ม) จึงไม่แสดงในหน้านี้ · กลุ่มเปรียบเทียบอิงตาม “กลุ่มระดับบริการ (GroupName)” จากไฟล์ต้นฉบับเสมอ ไม่ใช้ตัวกรองด้านบน</p>`;
 }
 
 /* ---------- export: excel / pdf per table ---------- */
